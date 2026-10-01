@@ -42,7 +42,7 @@ func (db *DB) GetCounter(ctx context.Context, name string) (Counter, error) {
 // UpsertCounter Inserts or Updates the counter
 // I probably count do something like incrementCounter()
 // But i think Upsert would be better,
-// Because i already have a ready counter struct
+// Because i already have both values
 func (db *DB) UpsertCounter(ctx context.Context, name string, count int64) error {
 	_, err := db.ExecContext(ctx, `
 	INSERT INTO counter (name, count) VALUES (?, ?)
