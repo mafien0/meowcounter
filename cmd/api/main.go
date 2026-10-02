@@ -18,6 +18,8 @@ import (
 
 var predicate = regexp.MustCompile("^[A-Za-z0-9._,-]+$")
 
+// Comments are not by ai, i write them for better navigation.
+// By hand.
 func main() {
 	godotenv.Load()
 
@@ -92,7 +94,7 @@ func main() {
 			return
 		}
 
-		// Store it in a buffer, so encode errors can be returned
+		// Store it in a buffer first, so encode errors can be returned
 		var buf bytes.Buffer
 		if err := png.Encode(&buf, img); err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
