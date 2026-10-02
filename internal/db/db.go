@@ -1,52 +1,43 @@
-// Package db: sqlite3 db
+// Package db provides a counter store backed by sqlite (local) or Turso (libSQL).
 package db
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var ErrNotFound = errors.New("not found")
-
-type DB struct {
-	*sql.DB
-}
 
 type Counter struct {
 	Name  string
 	Count int64
 }
 
-func Open(path string) (*DB, error) {
-	conn, err := sql.Open("sqlite3", path)
-	if err != nil {
-		return nil, fmt.Errorf("open sqlite3: %w", err)
-	}
-	conn.SetMaxOpenConns(1)
-	return &DB{conn}, nil
+// DB is the counter store each backend implements.
+type DB interface {
+	GetCounter(ctx context.Context, name string) (Counter, error)
+	UpsertCounter(ctx context.Context, name string, count int64) error
+	Close() error
 }
 
-func (db *DB) GetCounter(ctx context.Context, name string) (Counter, error) {
-	var c Counter
-	err := db.QueryRowContext(ctx, `SELECT name, count FROM counter WHERE name = ?`, name).Scan(&c.Name, &c.Count)
-	if errors.Is(err, sql.ErrNoRows) {
-		return Counter{name, 0}, ErrNotFound
-	}
-	return c, err
+// Config selects a backend.
+// Driver "sqlite" uses Path; driver "turso" uses URL and Token.
+type Config struct {
+	Driver string
+	Path   string
+	URL    string
+	Token  string
 }
 
-// UpsertCounter Inserts or Updates the counter
-// I probably count do something like incrementCounter()
-// But i think Upsert would be better,
-// Because i already have both values
-func (db *DB) UpsertCounter(ctx context.Context, name string, count int64) error {
-	_, err := db.ExecContext(ctx, `
-	INSERT INTO counter (name, count) VALUES (?, ?)
-	ON CONFLICT(name) DO UPDATE SET count = excluded.count
-	`, name, count)
-	return err
+// Open connects to the backend selected by cfg.Driver.
+func Open(cfg Config) (DB, error) {
+	switch cfg.Driver {
+	case "sqlite":
+		return openSQLite(cfg.Path)
+	case "turso":
+		return openTurso(cfg.URL, cfg.Token)
+	default:
+		return nil, fmt.Errorf("unsupported DB_DRIVER %q (want sqlite or turso)", cfg.Driver)
+	}
 }

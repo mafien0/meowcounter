@@ -32,7 +32,7 @@
             # DB
             sqlite
             goose
-            gcc # sqlite driver - CGO
+            turso-cli
           ];
         };
       }

@@ -21,13 +21,21 @@ func main() {
 	godotenv.Load()
 
 	// -- DB --
-	dbPath := os.Getenv("DB_PATH")
-	if dbPath == "" {
-		log.Println("WARNING: no `DB_PATH` env variable, defaulting to `<cwd>/meowcounter.db`")
-		dbPath = "meowcounter.db"
+	driver := os.Getenv("DB_DRIVER")
+	if driver == "" {
+		driver = "sqlite"
+	}
+	path := os.Getenv("SQLITE_PATH")
+	if path == "" {
+		path = "meowcounter.db"
 	}
 
-	d, err := db.Open(dbPath)
+	d, err := db.Open(db.Config{
+		Driver: driver,
+		Path:   path,
+		URL:    os.Getenv("TURSO_DATABASE_URL"),
+		Token:  os.Getenv("TURSO_AUTH_TOKEN"),
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
