@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"image/png"
 	"log"
@@ -51,8 +52,18 @@ func main() {
 
 	mux.HandleFunc("GET /@/{name}", func(w http.ResponseWriter, r *http.Request) {
 		var err error
-		name := r.PathValue("name")
 
+		name := r.PathValue("name")
+		log.Printf("GET: /@/{%v}\n", name)
+
+		// Name regex predicate
+		if name == "" || !predicate.MatchString(name) {
+			http.Error(w, "Invalid name!", http.StatusBadRequest)
+			log.Println("400: Invalid Name")
+			return
+		}
+
+		// Amount of girls holding digits
 		digitsQuery := r.URL.Query().Get("digits")
 		if digitsQuery == "" {
 			digitsQuery = "8"
@@ -64,12 +75,7 @@ func main() {
 			return
 		}
 
-		log.Printf("GET: /@/{%v}\n", name)
-		if name == "" || !predicate.MatchString(name) {
-			http.Error(w, "Invalid name!", http.StatusBadRequest)
-			log.Println("400: Invalid Name")
-			return
-		}
+		// Get the counter
 		counter, err := d.GetCounter(r.Context(), name)
 		if err != nil && !errors.Is(err, db.ErrNotFound) {
 			http.Error(w, "Internal Server Error.", http.StatusInternalServerError)
@@ -77,22 +83,36 @@ func main() {
 			return
 		}
 		count := counter.Count + 1
-		err = d.UpsertCounter(r.Context(), name, count)
-		if err != nil {
-			http.Error(w, "Internal Server Error.", http.StatusInternalServerError)
-			log.Println("500: %w", err)
-			return
-		}
 
+		// Glue an image
 		img, err := im.Glue(strconv.Itoa(int(count)), digits)
 		if err != nil {
 			http.Error(w, "Internal Server Error.", http.StatusInternalServerError)
 			log.Println("500: %w", err)
 			return
 		}
-		w.Header().Set("Content-Type", "image/png")
-		if err := png.Encode(w, img); err != nil {
+
+		// Store it in a buffer, so encode errors can be returned
+		var buf bytes.Buffer
+		if err := png.Encode(&buf, img); err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println("500: %w", err)
+		}
+
+		// Response
+		w.Header().Set("Content-Type", "image/png")
+		if _, err := w.Write(buf.Bytes()); err != nil {
+			log.Println("500: %w", err)
+			return
+		}
+
+		// Flush response to not keep client waiting for db write
+		if f, ok := w.(http.Flusher); ok {
+			f.Flush()
+		}
+
+		// slow: Update the counter
+		if err := d.UpsertCounter(r.Context(), name, count); err != nil {
 			log.Println("500: %w", err)
 		}
 	})
