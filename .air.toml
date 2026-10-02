@@ -8,9 +8,9 @@ tmp_dir = "tmp"
 [build]
 args_bin = []
 bin = "./out/mecount"
-cmd = "go build -o ./out/mecounter cmd/mecounter/main.go"
+cmd = "go build -o ./out/meowcounter cmd/meowcounter/main.go"
 delay = 1000
-entrypoint = ["./out/mecounter"]
+entrypoint = ["./out/meowcounter"]
 exclude_dir = ["assets", "tmp", "vendor", "testdata"]
 exclude_file = []
 exclude_regex = ["_test.go"]

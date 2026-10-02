@@ -10,7 +10,7 @@ import (
 	"image/png"
 	"sync"
 
-	"mecounter/assets"
+	"meowcounter/assets"
 )
 
 var ErrToMuch = errors.New("number is too much! increase numCount")

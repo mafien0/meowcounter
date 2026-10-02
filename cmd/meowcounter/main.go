@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"mecounter/internal/db"
-	im "mecounter/internal/image"
+	"meowcounter/internal/db"
+	im "meowcounter/internal/image"
 
 	"github.com/joho/godotenv"
 )
@@ -23,8 +23,8 @@ func main() {
 	// -- DB --
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
-		log.Println("WARNING: no `DB_PATH` env variable, defaulting to `<cwd>/mecounter.db`")
-		dbPath = "mecounter.db"
+		log.Println("WARNING: no `DB_PATH` env variable, defaulting to `<cwd>/meowcounter.db`")
+		dbPath = "meowcounter.db"
 	}
 
 	d, err := db.Open(dbPath)

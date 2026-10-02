@@ -1,4 +1,4 @@
-module mecounter
+module meowcounter
 
 go 1.26.7
 
