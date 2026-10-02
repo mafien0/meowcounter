@@ -22,14 +22,16 @@ var (
 )
 
 func load(num rune) (image.Image, error) {
-	// Read from cache first
+	// Try to dead from cache first
 	mu.Lock()
 	if img, ok := cache[num]; ok {
+		// Cache hit
 		mu.Unlock()
 		return img, nil
 	}
 	mu.Unlock()
 
+	// Cache miss
 	// Read from the embed
 	path, ok := m[num]
 	if !ok {

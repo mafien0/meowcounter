@@ -79,7 +79,7 @@ func main() {
 		counter, err := d.GetCounter(r.Context(), name)
 		if err != nil && !errors.Is(err, db.ErrNotFound) {
 			http.Error(w, "Internal Server Error.", http.StatusInternalServerError)
-			log.Println("500: %w", err)
+			log.Printf("500: %v\n", err)
 			return
 		}
 		count := counter.Count + 1
@@ -88,7 +88,7 @@ func main() {
 		img, err := im.Glue(strconv.Itoa(int(count)), digits)
 		if err != nil {
 			http.Error(w, "Internal Server Error.", http.StatusInternalServerError)
-			log.Println("500: %w", err)
+			log.Printf("500: %v", err)
 			return
 		}
 
@@ -96,13 +96,13 @@ func main() {
 		var buf bytes.Buffer
 		if err := png.Encode(&buf, img); err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			log.Println("500: %w", err)
+			log.Printf("500: %v", err)
 		}
 
 		// Response
 		w.Header().Set("Content-Type", "image/png")
 		if _, err := w.Write(buf.Bytes()); err != nil {
-			log.Println("500: %w", err)
+			log.Printf("500: %v", err)
 			return
 		}
 
@@ -113,7 +113,7 @@ func main() {
 
 		// slow: Update the counter
 		if err := d.UpsertCounter(r.Context(), name, count); err != nil {
-			log.Println("500: %w", err)
+			log.Printf("500: %v", err)
 		}
 	})
 
