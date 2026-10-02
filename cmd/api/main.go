@@ -60,34 +60,40 @@ func main() {
 		digits, err := strconv.Atoi(digitsQuery)
 		if err != nil {
 			http.Error(w, "Invalid digits query!", http.StatusBadRequest)
+			log.Println("400: Invalid Query")
 			return
 		}
 
 		log.Printf("GET: /@/{%v}\n", name)
 		if name == "" || !predicate.MatchString(name) {
 			http.Error(w, "Invalid name!", http.StatusBadRequest)
+			log.Println("400: Invalid Name")
 			return
 		}
 		counter, err := d.GetCounter(r.Context(), name)
 		if err != nil && !errors.Is(err, db.ErrNotFound) {
 			http.Error(w, "Internal Server Error.", http.StatusInternalServerError)
+			log.Println("500: %w", err)
 			return
 		}
 		count := counter.Count + 1
 		err = d.UpsertCounter(r.Context(), name, count)
 		if err != nil {
 			http.Error(w, "Internal Server Error.", http.StatusInternalServerError)
+			log.Println("500: %w", err)
 			return
 		}
 
 		img, err := im.Glue(strconv.Itoa(int(count)), digits)
 		if err != nil {
 			http.Error(w, "Internal Server Error.", http.StatusInternalServerError)
+			log.Println("500: %w", err)
 			return
 		}
 		w.Header().Set("Content-Type", "image/png")
 		if err := png.Encode(w, img); err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println("500: %w", err)
 		}
 	})
 

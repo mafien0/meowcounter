@@ -4,10 +4,10 @@ db_driver := env("DB_DRIVER", "sqlite")
 sqlite_path := env("SQLITE_PATH", "meowcounter.db")
 
 build:
-	go build cmd/meowcounter/main.go
+	go build cmd/api/main.go
 
 run:
-	go run cmd/meowcounter/main.go
+	go run cmd/api/main.go
 
 db-up:
 	@if [ "{{db_driver}}" = "turso" ]; then \
