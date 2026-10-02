@@ -8,7 +8,7 @@ tmp_dir = "tmp"
 [build]
 args_bin = []
 bin = "./out/mecount"
-cmd = "go build -o ./out/meowcounter cmd/meowcounter/main.go"
+cmd = "go build -o ./out/meowcounter cmd/api/main.go"
 delay = 1000
 entrypoint = ["./out/meowcounter"]
 exclude_dir = ["assets", "tmp", "vendor", "testdata"]
