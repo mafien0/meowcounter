@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"image/png"
 	"log"
 	"net/http"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"strconv"
 
 	"mecounter/internal/db"
+	im "mecounter/internal/image"
 
 	"github.com/joho/godotenv"
 )
@@ -33,15 +35,26 @@ func main() {
 
 	// -- API --
 	port := os.Getenv("PORT")
-	if dbPath == "" {
+	if port == "" {
 		log.Println("WARNING: no `PORT` env variable, defaulting to 3000")
-		dbPath = "3000"
+		port = "3000"
 	}
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /@/{name}", func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		name := r.PathValue("name")
+
+		digitsQuery := r.URL.Query().Get("digits")
+		if digitsQuery == "" {
+			digitsQuery = "8"
+		}
+		digits, err := strconv.Atoi(digitsQuery)
+		if err != nil {
+			http.Error(w, "Invalid digits query!", http.StatusBadRequest)
+			return
+		}
+
 		log.Printf("GET: /@/{%v}\n", name)
 		if name == "" || !predicate.MatchString(name) {
 			http.Error(w, "Invalid name!", http.StatusBadRequest)
@@ -58,8 +71,16 @@ func main() {
 			http.Error(w, "Internal Server Error.", http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.Write([]byte(strconv.FormatInt(count, 10)))
+
+		img, err := im.Glue(strconv.Itoa(int(count)), digits)
+		if err != nil {
+			http.Error(w, "Internal Server Error.", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "image/png")
+		if err := png.Encode(w, img); err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
 	})
 
 	log.Fatal(http.ListenAndServe(":"+port, mux))

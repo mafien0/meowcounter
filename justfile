@@ -1,8 +1,8 @@
 build:
-	go build cmd/mebuild/main.go
+	go build cmd/mecounter/main.go
 
 run:
-	go run cmd/mebuild/main.go
+	go run cmd/mecounter/main.go
 
 db-up:
 	goose -dir migrations sqlite3 ./mecounter.db up
